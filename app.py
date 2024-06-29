@@ -2,8 +2,13 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 from main import home,upload_csv
 from eda import EDA
+# import os
+# import subprocess
+import pandas as pd
 from preprocessing import preprocessing
-from utils import process_uploaded_file
+from utils import process_uploaded_file,save_feedback
+from streamlit_feedback import streamlit_feedback
+
 
 
 with st.sidebar:
@@ -45,3 +50,17 @@ elif selected == "EDA":
     EDA(st.session_state.df)
 elif selected == "Preprocessing":
     preprocessing(st.session_state.df)
+
+    # Add feedback collection point
+feedback = streamlit_feedback(feedback_type="faces",
+    optional_text_label="[Optional] Please provide an explanation",)
+st.write(feedback)
+# Save feedback if provided
+if feedback:
+    feedback_data = {
+        "feedback": feedback["score"],
+        "optional_text": feedback["text"],
+        "timestamp": pd.Timestamp.now()
+    }
+    save_feedback(feedback_data)
+    st.success("Thank you for your feedback!")

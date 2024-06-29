@@ -14,8 +14,8 @@ def filter_data(column, a, df):
 
 
 def preprocessing(uploaded_file):
-    st.title("Explanatory Data Analysis")
-    st.write("Welcome to Explanatory Data Analysis Page!")
+    st.title("Preprocessing")
+    st.write("Welcome to Preprocessing Page!")
 
     if uploaded_file is not None:
         selected = option_menu(
@@ -53,8 +53,6 @@ def preprocessing(uploaded_file):
         if checkbox:
             st.write(st.session_state.df)
 
-        # with st.sidebar:
-            # Create an option menu for navigation
 
 
         # Render the selected page
