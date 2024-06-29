@@ -12,8 +12,8 @@ with st.sidebar:
     # Create an option menu for navigation
     selected = option_menu(
         menu_title="Main Menu",
-        options=["Home", "EDA", "Preprocessing"],
-        icons=["house", "file", "gear"],
+        options=["Home", "EDA", "Preprocessing","FeedBack"],
+        icons=["house", "file","file", "gear"],
         menu_icon="cast",
         default_index=0,
         # orientation="horizontal",
@@ -46,19 +46,19 @@ elif selected == "EDA":
     EDA(st.session_state.df)
 elif selected == "Preprocessing":
     preprocessing(st.session_state.df)
-
+elif selected == "FeedBack":
     # Add feedback collection point
-feedback = streamlit_feedback(
-    feedback_type="faces",
-    optional_text_label="[Optional] Please provide an explanation",
-)
-st.write(feedback)
-# Save feedback if provided
-if feedback:
-    feedback_data = {
-        "feedback": feedback["score"],
-        "optional_text": feedback["text"],
-        "timestamp": pd.Timestamp.now(),
-    }
-    save_feedback(feedback_data)
-    st.success("Thank you for your feedback!")
+    feedback = streamlit_feedback(
+        feedback_type="faces",
+        optional_text_label="[Optional] Please provide an explanation",
+    )
+    # st.write(feedback)
+    # Save feedback if provided
+    if feedback:
+        feedback_data = {
+            "feedback": feedback["score"],
+            "optional_text": feedback["text"],
+            "timestamp": pd.Timestamp.now(),
+        }
+        save_feedback(feedback_data)
+        st.success("Thank you for your feedback!")
