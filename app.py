@@ -32,19 +32,29 @@ with st.sidebar:
     )
 
 
+# Initialize the session state if it doesn't exist
+if "df" not in st.session_state:
+    st.session_state.df = None
+
 # Render the selected page
 if selected == "Home":
     home()
     uploaded_file = upload_csv()
     if uploaded_file is not None:
-
-        st.session_state.uploaded_file = uploaded_file
-
-        st.session_state.df = process_uploaded_file(uploaded_file)
+        df = process_uploaded_file(uploaded_file)
+        st.session_state.df = df
 
 elif selected == "EDA":
-    EDA(st.session_state.df)
+    if st.session_state.df is not None:
+        EDA(st.session_state.df)
+    else:
+        st.write("Please Upload the CSV File in the Home Page to get started.")
+
 elif selected == "Preprocessing":
-    preprocessing(st.session_state.df)
+    if st.session_state.df is not None:
+        preprocessing(st.session_state.df)
+    else:
+        st.write("Please Upload the CSV File in the Home Page to get started.")
+
 elif selected == "FeedBack":
     feedback()
