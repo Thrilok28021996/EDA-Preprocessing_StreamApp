@@ -3,6 +3,9 @@ import pandas as pd
 import os
 import subprocess
 
+github_pat = os.getenv("GITHUB_PAT")
+repo_url = "https://x-access-token:{github_pat}@github.com:Thrilok28021996/EDA-Preprocessing_StreamApp.git"
+
 
 # Define a function to process and cache uploaded data
 @st.cache_data
@@ -25,4 +28,4 @@ def save_feedback(feedback_data):
         # Git commands to add, commit, and push the CSV file
     subprocess.run(["git", "add", feedback_file])
     subprocess.run(["git", "commit", "-m", "Update feedback"])
-    subprocess.run(["git", "push"])
+    subprocess.run(["git", "push", repo_url])
