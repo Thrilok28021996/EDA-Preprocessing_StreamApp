@@ -1,19 +1,17 @@
-from feedback import feedback
 import streamlit as st
 from streamlit_option_menu import option_menu
 from main import home, upload_csv
 from eda import EDA
 from preprocessing import preprocessing
 from utils import process_uploaded_file
-from feedback import feedback
 
 
 with st.sidebar:
     # Create an option menu for navigation
     selected = option_menu(
         menu_title="Main Menu",
-        options=["Home", "EDA", "Preprocessing", "FeedBack"],
-        icons=["house", "file", "file", "gear"],
+        options=["Home", "EDA", "Preprocessing"],
+        icons=["house", "file", "file"],
         menu_icon="cast",
         default_index=0,
         # orientation="horizontal",
@@ -55,6 +53,3 @@ elif selected == "Preprocessing":
         preprocessing(st.session_state.df)
     else:
         st.write("Please Upload the CSV File in the Home Page to get started.")
-
-elif selected == "FeedBack":
-    feedback()
