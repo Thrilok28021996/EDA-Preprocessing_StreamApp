@@ -5,6 +5,10 @@ from eda import EDA
 from preprocessing import preprocessing
 from utils import process_uploaded_file
 
+st.set_page_config(
+    page_title="EDA and Preprocessing",
+    page_icon="🧑‍💻",
+)
 
 with st.sidebar:
     # Create an option menu for navigation
@@ -53,3 +57,6 @@ elif selected == "Preprocessing":
         preprocessing(st.session_state.df)
     else:
         st.write("Please Upload the CSV File in the Home Page to get started.")
+
+
+st.write("For any Queries or Feedback. Please mail to : altrathrill@gmail.com")

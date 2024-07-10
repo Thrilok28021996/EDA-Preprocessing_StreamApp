@@ -3,6 +3,13 @@ from streamlit_option_menu import option_menu
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import colors
+from utils import (
+    check_missing_values,
+    find_duplicates,
+    detect_outliers,
+    check_data_types,
+)
+import numpy as np
 
 
 def EDA(uploaded_file):
@@ -21,7 +28,10 @@ def EDA(uploaded_file):
 
     # Create a checkbox in the sidebar
     checkbox = st.checkbox("Show data")
-    remove_null = st.checkbox("Remove null from data")
+    duplicates = st.checkbox("Find Duplicates in the data")
+    missing_data = st.checkbox("Find Missing data")
+    outliers = st.checkbox("Find Outliers in data wrt column")
+    data_type = st.checkbox("Check the data type of the columns")
     bar = st.checkbox("Bar Graph")
     line = st.checkbox("Line Graph")
     hist = st.checkbox("Histogram")
