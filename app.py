@@ -1,9 +1,10 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 from main import home, upload_csv
-from eda import EDA
+from eda import explanatory_data_analysis
 from preprocessing import preprocessing
 from utils import process_uploaded_file
+
 
 st.set_page_config(
     page_title="EDA and Preprocessing",
@@ -48,7 +49,7 @@ if selected == "Home":
 
 elif selected == "EDA":
     if st.session_state.df is not None:
-        EDA(st.session_state.df)
+        explanatory_data_analysis(st.session_state.df)
     else:
         st.write("Please Upload the CSV File in the Home Page to get started.")
 

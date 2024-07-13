@@ -1,7 +1,5 @@
 import streamlit as st
 import pandas as pd
-import os
-import subprocess
 
 
 # Define a function to process and cache uploaded data

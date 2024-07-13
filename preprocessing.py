@@ -1,17 +1,18 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
-import pandas as pd
 
 
 def filter_data(column, a, df):
+    """Function To filter the data."""
     if column != "All":
-        df = df[df[column] == a]
+        data = df[df[column] == a]
     elif column == "All":
-        df = df
-    return df
+        data = df.copy()
+    return data
 
 
 def preprocessing(uploaded_file):
+    """Function for preprocessing the Data."""
     st.title("Preprocessing")
     st.write("Welcome to Preprocessing Page!")
 
@@ -112,7 +113,7 @@ def preprocessing(uploaded_file):
 
             # Generate filters dynamically
             for i in range(st.session_state.num_filters):
-                st.text(f"Filter {i+1}")
+                st.text("Filter:", {i + 1})
                 use_previous = st.checkbox(
                     f"Use previous filter for next filter ", key=f"use_previous_{i}"
                 )

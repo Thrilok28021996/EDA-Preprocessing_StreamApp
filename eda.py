@@ -1,6 +1,4 @@
 import streamlit as st
-from streamlit_option_menu import option_menu
-import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import colors
 from utils import (
@@ -9,10 +7,9 @@ from utils import (
     detect_outliers,
     check_data_types,
 )
-import numpy as np
 
 
-def EDA(uploaded_file):
+def explanatory_data_analysis(uploaded_file):
     st.title("Explanatory Data Analysis")
     st.write("Welcome to Explanatory Data Analysis Page!")
 
@@ -28,27 +25,24 @@ def EDA(uploaded_file):
 
     # Create a checkbox in the sidebar
     checkbox = st.checkbox("Show data")
-    duplicates = st.checkbox("Find Duplicates in the data")
-    missing_data = st.checkbox("Find Missing data")
-    outliers = st.checkbox("Find Outliers in data wrt column")
-    data_type = st.checkbox("Check the data type of the columns")
-    bar = st.checkbox("Bar Graph")
+    bar_graph = st.checkbox("Bar Graph")
     line = st.checkbox("Line Graph")
     hist = st.checkbox("Histogram")
     pie = st.checkbox("Pie Graph")
     scatter = st.checkbox("Scatter Graph")
     box = st.checkbox("Box Graph")
     heatmap = st.checkbox("Heatmap")
-    violin = st.checkbox("Violin Graph")
-    correlation = st.checkbox("Correlation")
     area = st.checkbox("Area Graph")
+    duplicates = st.checkbox("Find Duplicates in the data")
+    check_missing_values = st.checkbox("Find Missing data")
+    outliers = st.checkbox("Find Outliers in data wrt column")
 
     # If the checkbox is ticked, display the DataFrame
     if checkbox:
         st.write(st.session_state.df)
-    elif bar:
+    elif bar_graph:
         fig, ax = plt.subplots()
-        X_axis = st.selectbox(
+        x_axis = st.selectbox(
             label="X-axis", options=st.session_state.df.columns.tolist()
         )
         y_axis_option = st.selectbox(
@@ -59,42 +53,42 @@ def EDA(uploaded_file):
         )
 
         if y_axis_option == "value_counts":
-            count = st.session_state.df[X_axis].value_counts()
+            count = st.session_state.df[x_axis].value_counts()
             ax.bar(count.index, count.values, color="maroon", width=0.4)
             ax.set_ylabel("Counts")
         else:
             ax.bar(
-                st.session_state.df[X_axis],
+                st.session_state.df[x_axis],
                 st.session_state.df[y_axis_option],
                 color="maroon",
                 width=0.4,
             )
             ax.set_ylabel(y_axis_option)
-        ax.set_xlabel(X_axis)
-        ax.set_title(f"{y_axis_option} for {X_axis}")
+        ax.set_xlabel(x_axis)
+        ax.set_title(f"{y_axis_option} for {x_axis}")
         st.pyplot(fig)
 
     elif line:
         fig, ax = plt.subplots()
-        X_axis = st.selectbox(
+        x_axis = st.selectbox(
             label="X-axis", options=st.session_state.df.columns.tolist()
         )
         y_axis_option = st.selectbox(label="Y-axis", options=["value_counts"])
 
         if y_axis_option == "value_counts":
-            count = st.session_state.df[X_axis].value_counts()
+            count = st.session_state.df[x_axis].value_counts()
             ax.plot(count.index, count.values, marker="o")
             ax.set_ylabel("Counts")
         else:
             ax.plot(
-                st.session_state.df[X_axis],
+                st.session_state.df[x_axis],
                 st.session_state.df[y_axis_option],
                 marker="o",
             )
             ax.set_ylabel(y_axis_option)
 
-        ax.set_xlabel(X_axis)
-        ax.set_title(f"{y_axis_option} for {X_axis}")
+        ax.set_xlabel(x_axis)
+        ax.set_title(f"{y_axis_option} for {x_axis}")
         st.pyplot(fig)
 
     elif hist:
@@ -173,6 +167,17 @@ def EDA(uploaded_file):
         )
 
         st.area_chart(st.session_state.df, x=x_axis, y=y_axis)
+    elif duplicates:
+        find_duplicates(st.session_state.df)
+    elif check_missing_values:
+        check_missing_values(st.session_state.df)
+    elif outliers:
+        columns = st.multiselect(
+            label="Select columns", options=st.session_state.df.columns.tolist()
+        )
+        detect_outliers(st.session_state.df, columns)
+    elif data_type:
+        check_data_types(st.session_state.df)
 
     # elif uploaded_file is None:
     #     st.write("Please Upload the CSV File in the Home Page to get started")
