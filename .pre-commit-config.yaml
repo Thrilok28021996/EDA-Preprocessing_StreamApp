@@ -1,6 +1,37 @@
+# install these package
+# pre-commit
+# black
+# pyupgrade
+# autopep8
+
+
 repos:
 - repo: https://github.com/psf/black
   rev: 24.4.2
   hooks:
   - id: black
     args: ['--safe']
+
+- repo: https://github.com/asottile/pyupgrade
+  rev: v3.16.0
+  hooks:
+  - id: pyupgrade
+
+- repo: https://github.com/hhatto/autopep8
+  rev: v2.3.1  # select the tag or revision you want, or run `pre-commit autoupdate`
+  hooks:
+  - id: autopep8
+
+- repo: https://github.com/PyCQA/isort.git
+  rev: 5.13.2  # select the tag or revision you want, or run `pre-commit autoupdate`
+  hooks:
+  - id: isort
+
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.5.1
+  hooks:
+  - id: ruff
+    types_or: [ python, pyi, jupyter ]
+    args: [ --fix ]
+  - id: ruff-format
+    types_or: [ python, pyi, jupyter ]
