@@ -1,6 +1,12 @@
+"""
+This App.py File has code related to Home page. 
+Such as Different Functionalities to access the different options to choose from.
+"""
+
 import streamlit as st
 import matplotlib.pyplot as plt
 from matplotlib import colors
+import numpy as np
 from utils import (
     check_missing_values,
     find_duplicates,
@@ -10,6 +16,7 @@ from utils import (
 
 
 def explanatory_data_analysis(uploaded_file):
+    """Function that has code for Explanatory data analysis."""
     st.title("Explanatory Data Analysis")
     st.write("Welcome to Explanatory Data Analysis Page!")
 
@@ -34,8 +41,9 @@ def explanatory_data_analysis(uploaded_file):
     heatmap = st.checkbox("Heatmap")
     area = st.checkbox("Area Graph")
     duplicates = st.checkbox("Find Duplicates in the data")
-    check_missing_values = st.checkbox("Find Missing data")
+    missing_values_check = st.checkbox("Find Missing data")
     outliers = st.checkbox("Find Outliers in data wrt column")
+    data_type = st.checkbox("Print the Data types of the columns")
 
     # If the checkbox is ticked, display the DataFrame
     if checkbox:
@@ -169,11 +177,14 @@ def explanatory_data_analysis(uploaded_file):
         st.area_chart(st.session_state.df, x=x_axis, y=y_axis)
     elif duplicates:
         find_duplicates(st.session_state.df)
-    elif check_missing_values:
+    elif missing_values_check:
         check_missing_values(st.session_state.df)
     elif outliers:
-        columns = st.multiselect(
-            label="Select columns", options=st.session_state.df.columns.tolist()
+        columns = st.selectbox(
+            label="Select columns",
+            options=st.session_state.df.select_dtypes(
+                include=[np.number]
+            ).columns.tolist(),
         )
         detect_outliers(st.session_state.df, columns)
     elif data_type:

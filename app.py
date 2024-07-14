@@ -1,3 +1,8 @@
+"""
+This App.py File has code related to Home page. 
+Such as Different Functionalities to access the different options to choose from.
+"""
+
 import streamlit as st
 from streamlit_option_menu import option_menu
 from main import home, upload_csv
@@ -52,7 +57,6 @@ elif selected == "EDA":
         explanatory_data_analysis(st.session_state.df)
     else:
         st.write("Please Upload the CSV File in the Home Page to get started.")
-
 elif selected == "Preprocessing":
     if st.session_state.df is not None:
         preprocessing(st.session_state.df)

@@ -96,6 +96,12 @@ def preprocessing(uploaded_file):
                 # Display the updated DataFrame
                 st.write(st.session_state.df)
 
+            # Button to reset to original values
+            if st.button("Reset to Original"):
+                st.session_state.df = st.session_state.original_df.copy()
+                st.success("DataFrame reset to original values")
+                st.write(st.session_state.df)
+
         elif selected == "Filter":
             st.title("Filter the Columns in dataframe")
             # Initialize session state

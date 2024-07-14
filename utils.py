@@ -1,3 +1,8 @@
+"""
+This Utils.py File has code related to Utilizing the different functions. 
+
+"""
+
 import streamlit as st
 import pandas as pd
 
@@ -5,6 +10,7 @@ import pandas as pd
 # Define a function to process and cache uploaded data
 @st.cache_data
 def process_uploaded_file(uploaded_file):
+    """Function."""
     if uploaded_file is not None:
         # Read the uploaded CSV file
         df = pd.read_csv(uploaded_file)
@@ -13,12 +19,14 @@ def process_uploaded_file(uploaded_file):
 
 
 def check_missing_values(df):
+    """Function."""
     missing_data = df.isnull().sum()
     st.write("Missing data:")
     st.dataframe(missing_data)
 
 
 def find_duplicates(df):
+    """Function."""
     duplicated_rows = df.duplicated().any()
     if duplicated_rows:
         st.write("Duplicates found:", df[df.duplicated()])
@@ -27,6 +35,7 @@ def find_duplicates(df):
 
 
 def detect_outliers(df, column_name):
+    """Function."""
     # Implement outlier detection logic using IQR
     q1 = df[column_name].quantile(0.25)
     q3 = df[column_name].quantile(0.75)
@@ -45,6 +54,7 @@ def detect_outliers(df, column_name):
 
 
 def check_data_types(df):
+    """Function."""
     dtypes_df = df.dtypes
     dtypes_df.columns = ["Column", "Data Type"]
     st.write("Data types:")

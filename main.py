@@ -1,3 +1,7 @@
+"""
+This main.py File has code related to Home page. 
+"""
+
 import streamlit as st
 
 
