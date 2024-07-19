@@ -1,7 +1,18 @@
+"""This module provides a feedback form function for Streamlit applications."""
+
 import streamlit as st
 
 
 def feedback(info):
+    """
+    Create and display a feedback form using Streamlit and HTML.
+
+    Args:
+        info (dict): A dictionary containing user information. Must include an 'Email' key.
+
+    Returns:
+        None. The function displays the form using Streamlit's st.markdown().
+    """
     st.subheader("📨 Contact Me")
     email = info["Email"]
     contact_form = f"""

@@ -1,10 +1,18 @@
+"""
+This module contains constant values and configuration for the application.
+"""
+
 info = {
     "Pronoun": "Him",
     "Name": "Thrilok",
     "Full_Name": "Thrilok E",
     "Email": "thriloke96@gmail.com",
     "Intro": "A Data Science Engineer who likes to explore new technology.",
-    "About": "Hey there, I'm Thrilok! I'm passionate about sharing my technical and data knowledge. My expertise covers a wide range of topics, from AI/ML and Data Science.",
+    "About": (
+        "Hey there, I'm Thrilok! I'm passionate about sharing my technical "
+        "and data knowledge. My expertise covers a wide range of topics, "
+        "from AI/ML and Data Science."
+    ),
     "Github": "https://github.com/Thrilok28021996",
     # "Medium": "https://medium.com/@vicky-note/about",
     "City": "AndhraPradesh, India",

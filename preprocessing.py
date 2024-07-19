@@ -1,13 +1,81 @@
+"""
+This module contains functions for data preprocessing using Streamlit.
+It provides a user interface for selecting columns, replacing values, and filtering data.
+"""
+
 import pandas as pd
 import streamlit as st
 from streamlit_option_menu import option_menu
 
 
-def filter_data(column, value, df):
+def choose_columns(df):
+    """Function to choose columns in the data."""
+    st.subheader("Select Columns")
+    columns = st.multiselect(
+        label="Choose columns to keep",
+        options=df.columns.tolist(),
+    )
+    if columns:
+        df = df[columns]
+        st.success(f"Selected {len(columns)} columns")
+    return df
+
+
+def replace_values(df):
+    """Function to Replace values in the data."""
+    st.subheader("Replace Values")
+    col1, col2 = st.columns(2)
+    with col1:
+        column_to_edit = st.selectbox("Select Column to Edit", df.columns)
+    with col2:
+        current_value = st.selectbox(
+            "Select value to replace",
+            df[column_to_edit].unique(),
+        )
+    new_value = st.text_input("Enter new value")
+
+    if st.button("Replace", key="replace_button"):
+        df[column_to_edit] = df[column_to_edit].replace(current_value, new_value)
+        st.success(
+            f"Replaced '{current_value}' with '{new_value}' in column '{column_to_edit}'"
+        )
+
+    return df
+
+
+def filter_data_ui(df):
     """Function to filter the data."""
-    if column != "All" and value != "All":
-        return df[df[column] == value]
-    return df.copy()
+    st.subheader("Filter Data")
+    if "filters" not in st.session_state:
+        st.session_state.filters = []
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Add Filter", key="add_filter"):
+            st.session_state.filters.append({})
+    with col2:
+        if st.button("Remove Filter", key="remove_filter") and st.session_state.filters:
+            st.session_state.filters.pop()
+
+    for i, _ in enumerate(st.session_state.filters):
+        st.markdown(f"**Filter {i+1}**")
+        col1, col2 = st.columns(2)
+        with col1:
+            column = st.selectbox(
+                "Filter column",
+                options=["All"] + df.columns.tolist(),
+                key=f"column_{i}",
+            )
+        with col2:
+            if column != "All":
+                value = st.selectbox(
+                    f"Select value for {column}",
+                    options=["All"] + df[column].unique().tolist(),
+                    key=f"value_{i}",
+                )
+                df = filter_data(column, value, df)
+
+    return df
 
 
 def preprocessing(uploaded_file):
@@ -57,83 +125,13 @@ def preprocessing(uploaded_file):
 
         # Render the selected page
         if selected == "Choose Columns":
-            st.subheader("Select Columns")
-            columns = st.multiselect(
-                label="Choose columns to keep",
-                options=st.session_state.df.columns.tolist(),
-            )
-            if columns:
-                st.session_state.df = st.session_state.df[columns]
-                st.success(f"Selected {len(columns)} columns")
-                st.write(st.session_state.df)
-
+            st.session_state.df = choose_columns(st.session_state.df)
         elif selected == "Replace Values":
-            st.subheader("Replace Values")
-            col1, col2 = st.columns(2)
-            with col1:
-                column_to_edit = st.selectbox(
-                    "Select Column to Edit", st.session_state.df.columns
-                )
-            with col2:
-                current_value = st.selectbox(
-                    "Select value to replace",
-                    st.session_state.df[column_to_edit].unique(),
-                )
-            new_value = st.text_input("Enter new value")
-
-            if st.button("Replace", key="replace_button"):
-                st.session_state.df[column_to_edit] = st.session_state.df[
-                    column_to_edit
-                ].replace(current_value, new_value)
-                st.success(
-                    f"Replaced '{current_value}' with '{new_value}' in column '{column_to_edit}'"
-                )
-                st.write(st.session_state.df)
-
-            if st.button("Reset to Original", key="reset_button"):
-                st.session_state.df = st.session_state.original_df.copy()
-                st.success("DataFrame reset to original values")
-                st.write(st.session_state.df)
-
+            st.session_state.df = replace_values(st.session_state.df)
         elif selected == "Filter Data":
-            st.subheader("Filter Data")
-            if "filters" not in st.session_state:
-                st.session_state.filters = []
+            st.session_state.df = filter_data_ui(st.session_state.df)
 
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("Add Filter", key="add_filter"):
-                    st.session_state.filters.append({})
-            with col2:
-                if (
-                    st.button("Remove Filter", key="remove_filter")
-                    and st.session_state.filters
-                ):
-                    st.session_state.filters.pop()
-
-            filtered_df = st.session_state.df
-
-            for i, filter_dict in enumerate(st.session_state.filters):
-                st.markdown(f"**Filter {i+1}**")
-                col1, col2 = st.columns(2)
-                with col1:
-                    column = st.selectbox(
-                        "Filter column",
-                        options=["All"] + filtered_df.columns.tolist(),
-                        key=f"column_{i}",
-                    )
-                with col2:
-                    if column != "All":
-                        value = st.selectbox(
-                            f"Select value for {column}",
-                            options=["All"] +
-                            filtered_df[column].unique().tolist(),
-                            key=f"value_{i}",
-                        )
-                        filtered_df = filter_data(column, value, filtered_df)
-
-            st.session_state.df = filtered_df
-            st.write(st.session_state.df)
+        st.write(st.session_state.df)
 
     else:
         st.warning("Please upload a CSV file on the Home Page to get started")
