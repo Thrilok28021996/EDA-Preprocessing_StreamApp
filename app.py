@@ -13,8 +13,7 @@ from main import home, upload_csv
 from preprocessing import preprocessing
 from utils import process_uploaded_file
 
-st.set_page_config(page_title="EDA and Preprocessing",
-                   page_icon="🧑‍💻", layout="wide")
+st.set_page_config(page_title="EDA and Preprocessing", page_icon="🧑‍💻", layout="wide")
 # Add custom CSS
 st.markdown(
     """
@@ -27,7 +26,7 @@ st.markdown(
             color: white;
         }
         .stSelectbox {
-            background-color: white;
+            background-color: black;
         }
         </style>
     """,

@@ -97,9 +97,9 @@ def preprocessing(uploaded_file):
                 styles={
                     "container": {
                         "padding": "0!important",
-                        "background-color": "#f0f2f6",
+                        "background-color": "#697da5",
                     },
-                    "icon": {"color": "#0083B8", "font-size": "25px"},
+                    "icon": {"color": "#00adf3", "font-size": "25px"},
                     "nav-link": {
                         "font-size": "16px",
                         "text-align": "left",
