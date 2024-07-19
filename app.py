@@ -13,9 +13,25 @@ from main import home, upload_csv
 from preprocessing import preprocessing
 from utils import process_uploaded_file
 
-st.set_page_config(
-    page_title="EDA and Preprocessing",
-    page_icon="🧑‍💻",
+st.set_page_config(page_title="EDA and Preprocessing",
+                   page_icon="🧑‍💻", layout="wide")
+# Add custom CSS
+st.markdown(
+    """
+        <style>
+        .stApp {
+            background-color: black;
+        }
+        .stButton>button {
+            background-color: #0083B8;
+            color: white;
+        }
+        .stSelectbox {
+            background-color: white;
+        }
+        </style>
+    """,
+    unsafe_allow_html=True,
 )
 
 with st.sidebar:
@@ -58,21 +74,18 @@ elif selected == "EDA":
     if st.session_state.df is not None:
         explanatory_data_analysis(st.session_state.df)
     else:
-        st.write("Please Upload the CSV File in the Home Page to get started.")
+        st.warning("Please Upload the CSV File in the Home Page to get started.")
 elif selected == "Preprocessing":
     if st.session_state.df is not None:
         preprocessing(st.session_state.df)
     else:
-        st.write("Please Upload the CSV File in the Home Page to get started.")
+        st.warning("Please Upload the CSV File in the Home Page to get started.")
 
 elif selected == "Feedback":
     if st.session_state.df is not None:
         feedback(info)
     else:
-        st.write(
+        st.warning(
             """Please Upload the CSV File in the Home Page to get started.\n
             Once you have used the app. Please provide the feedback here."""
         )
-
-
-# st.write("For any Queries or Feedback. Please mail to : altrathrill@gmail.com")
