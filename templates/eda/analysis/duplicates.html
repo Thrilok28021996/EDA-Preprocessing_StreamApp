@@ -1,0 +1,60 @@
+<div class="card mb-3">
+    <div class="card-header">
+        <h5><i class="bi bi-files"></i> Duplicate Rows Analysis</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Summary</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Total Rows:</strong> <span class="badge bg-info">{{ result.total_rows }}</span></li>
+                    <li><strong>Unique Rows:</strong> <span class="badge bg-success">{{ result.unique_rows }}</span></li>
+                    <li><strong>Duplicate Rows:</strong> <span class="badge bg-warning">{{ result.duplicate_count }}</span></li>
+                </ul>
+            </div>
+        </div>
+        
+        {% if result.has_duplicates %}
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i> 
+            Found {{ result.duplicate_count }} duplicate row{{ result.duplicate_count|pluralize }}.
+        </div>
+        
+        {% if result.duplicate_rows %}
+        <div class="row mt-3">
+            <div class="col-12">
+                <h6>Sample Duplicate Rows</h6>
+                <div class="scrollable-content">
+                    <table class="table table-dark table-striped table-sm">
+                        <thead>
+                            <tr>
+                                {% for key in result.duplicate_rows.0.keys %}
+                                <th>{{ key }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in result.duplicate_rows|slice:":10" %}
+                            <tr>
+                                {% for value in row.values %}
+                                <td>{{ value }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% if result.duplicate_rows|length > 10 %}
+                    <small class="text-muted">Showing first 10 duplicate rows...</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle"></i> Excellent! No duplicate rows found in the dataset.
+        </div>
+        {% endif %}
+    </div>
+</div>

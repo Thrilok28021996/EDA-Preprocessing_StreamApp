@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - EDA and Preprocessing{% endblock %}
+
+{% block sidebar_title %}Main Menu{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center mb-4">
+            <h1 class="display-4 text-primary">Welcome to EDA and Preprocessing 🙏🏼</h1>
+        </div>
+    </div>
+</div>
+
+<!-- Introduction Section -->
+<div class="row mb-4">
+    <div class="col-md-8 mx-auto">
+        <div class="card bg-dark">
+            <div class="card-body text-center">
+                <h5 class="card-title text-info">{{ info.Intro }}</h5>
+                <p class="card-text">{{ info.About }}</p>
+                <p class="card-text">
+                    <small class="text-muted">
+                        To know more about the projects I have worked on, check my 
+                        <a href="{{ info.Github }}" target="_blank" class="text-primary">GitHub profile</a>
+                    </small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- File Upload Section -->
+<div class="row mb-4">
+    <div class="col-md-10 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-cloud-upload"></i> Upload your CSV file To Get Started
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if request.session.df_uploaded %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle"></i>
+                        <strong>File Loaded:</strong> {{ request.session.df_filename }}
+                        <br>
+                        <small>Shape: {{ request.session.df_shape.0 }} rows × {{ request.session.df_shape.1 }} columns</small>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Columns in your dataset:</h6>
+                            <div class="scrollable-content">
+                                <ul class="list-group">
+                                    {% for column in request.session.df_columns %}
+                                        <li class="list-group-item bg-dark text-light">{{ column }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Next Steps:</h6>
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'eda:index' %}" class="btn btn-primary">
+                                    <i class="bi bi-bar-chart"></i> Start EDA Analysis
+                                </a>
+                                <a href="{% url 'preprocessing:index' %}" class="btn btn-success">
+                                    <i class="bi bi-gear"></i> Preprocess Data
+                                </a>
+                                <form method="post" action="{% url 'home:upload_csv' %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="clear_session" value="true">
+                                    <button type="submit" class="btn btn-outline-warning w-100">
+                                        <i class="bi bi-arrow-clockwise"></i> Upload New File
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- File Upload Form -->
+                    <form method="post" action="{% url 'home:upload_csv' %}" enctype="multipart/form-data" id="upload-form">
+                        {% csrf_token %}
+                        <div class="file-upload-area mb-3">
+                            <div class="row">
+                                <div class="col-12 text-center">
+                                    <i class="bi bi-cloud-upload display-4 text-primary mb-3"></i>
+                                    <h5>Drag & Drop your CSV file here</h5>
+                                    <p class="text-muted">or click to browse</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-8 mx-auto">
+                                    <input type="file" class="form-control" id="csv-file" name="csv_file" 
+                                           accept=".csv" required onchange="validateCSVFile(this)">
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12 text-center">
+                                    <small class="text-muted">
+                                        Maximum file size: 10MB | Supported format: CSV
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mx-auto">
+                                <button type="submit" class="btn btn-primary btn-lg w-100" id="upload-btn">
+                                    <i class="bi bi-upload"></i> Upload CSV
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Overview -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightbulb"></i> What you can do with this application
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-dark h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-bar-chart display-4 text-info mb-3"></i>
+                                <h6 class="card-title">Exploratory Data Analysis</h6>
+                                <p class="card-text">
+                                    Generate interactive charts, analyze data distribution, 
+                                    find outliers, check for missing values and duplicates.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-dark h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-gear display-4 text-success mb-3"></i>
+                                <h6 class="card-title">Data Preprocessing</h6>
+                                <p class="card-text">
+                                    Select columns, replace values, filter data, 
+                                    and prepare your dataset for analysis.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-dark h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-download display-4 text-warning mb-3"></i>
+                                <h6 class="card-title">Export Results</h6>
+                                <p class="card-text">
+                                    Download your processed dataset in CSV format 
+                                    and save your analysis results.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// File upload form handling
+document.getElementById('upload-form').addEventListener('submit', function(e) {
+    const fileInput = document.getElementById('csv-file');
+    const uploadBtn = document.getElementById('upload-btn');
+    
+    if (!fileInput.files.length) {
+        e.preventDefault();
+        showAlert('Please select a CSV file to upload.', 'warning');
+        return;
+    }
+    
+    // Show loading state
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+});
+
+// Clear session functionality
+function clearSession() {
+    if (confirm('This will clear the current dataset. Are you sure?')) {
+        fetch('{% url "home:upload_csv" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: 'clear_session=true'
+        }).then(() => {
+            location.reload();
+        });
+    }
+}
+</script>
+{% endblock %}

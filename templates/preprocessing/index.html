@@ -1,0 +1,840 @@
+{% extends 'base.html' %}
+
+{% block title %}Preprocessing - Data Preprocessing{% endblock %}
+
+{% block sidebar_title %}Preprocessing Options{% endblock %}
+
+{% block sidebar_content %}
+{% if not no_data %}
+<div class="list-group list-group-flush">
+    <!-- Column Operations -->
+    <div class="list-group-item bg-dark text-light border-secondary">
+        <h6 class="mb-2">🔧 Column Operations</h6>
+        <div class="d-grid gap-1">
+            <button class="btn btn-outline-success btn-sm" onclick="showPreprocessingModal('select_columns')">
+                Select Columns
+            </button>
+            <button class="btn btn-outline-warning btn-sm" onclick="showPreprocessingModal('drop_columns')">
+                Drop Columns
+            </button>
+            <button class="btn btn-outline-info btn-sm" onclick="showPreprocessingModal('replace_values')">
+                Replace Values
+            </button>
+        </div>
+    </div>
+    
+    <!-- Data Cleaning -->
+    <div class="list-group-item bg-dark text-light border-secondary">
+        <h6 class="mb-2">🧹 Data Cleaning</h6>
+        <div class="d-grid gap-1">
+            <button class="btn btn-outline-primary btn-sm" onclick="applyPreprocessing('drop_duplicates', {})">
+                Remove Duplicates
+            </button>
+            <button class="btn btn-outline-primary btn-sm" onclick="showPreprocessingModal('drop_missing')">
+                Drop Missing Values
+            </button>
+            <button class="btn btn-outline-primary btn-sm" onclick="showPreprocessingModal('fill_missing')">
+                Fill Missing Values
+            </button>
+        </div>
+    </div>
+    
+    <!-- Data Filtering -->
+    <div class="list-group-item bg-dark text-light border-secondary">
+        <h6 class="mb-2">📊 Filtering</h6>
+        <div class="d-grid gap-1">
+            <button class="btn btn-outline-secondary btn-sm" onclick="showPreprocessingModal('filter_data')">
+                Filter Data
+            </button>
+        </div>
+    </div>
+    
+    <!-- Export & Reset -->
+    <div class="list-group-item bg-dark text-light border-secondary">
+        <h6 class="mb-2">💾 Export & Reset</h6>
+        <div class="d-grid gap-1">
+            <button class="btn btn-outline-info btn-sm" onclick="exportProcessedData('csv')">
+                Export CSV
+            </button>
+            <button class="btn btn-outline-info btn-sm" onclick="exportProcessedData('json')">
+                Export JSON
+            </button>
+            <button class="btn btn-outline-danger btn-sm" onclick="resetData()">
+                Reset to Original
+            </button>
+        </div>
+    </div>
+</div>
+{% else %}
+{{ block.super }}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="display-4 text-success mb-4">Data Preprocessing</h1>
+        <p class="lead">Welcome to the Preprocessing Page!</p>
+    </div>
+</div>
+
+{% if no_data %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i>
+        <strong>No Data Found!</strong> Please upload a CSV file in the Home Page to get started.
+    </div>
+    <div class="text-center">
+        <a href="{% url 'home:index' %}" class="btn btn-primary">
+            <i class="bi bi-house"></i> Go to Home Page
+        </a>
+    </div>
+{% else %}
+    <!-- Dataset Overview -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-info-circle"></i> Current Dataset</h5>
+                </div>
+                <div class="card-body" id="dataset-info">
+                    <ul class="list-unstyled">
+                        <li><strong>Filename:</strong> {{ request.session.df_filename }}</li>
+                        <li><strong>Shape:</strong> <span id="current-shape">{{ df_info.shape.0 }} rows × {{ df_info.shape.1 }} columns</span></li>
+                        <li><strong>Memory Usage:</strong> {{ df_info.memory_usage|filesizeformat }}</li>
+                        <li><strong>Missing Values:</strong> <span class="badge bg-warning" id="missing-count">{{ df_info.total_nulls }}</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-list-columns"></i> Column Types</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><strong>Numeric:</strong> <span class="badge bg-success">{{ numeric_columns|length }}</span></li>
+                        <li><strong>Categorical:</strong> <span class="badge bg-primary">{{ categorical_columns|length }}</span></li>
+                        <li><strong>Total:</strong> <span class="badge bg-info">{{ all_columns|length }}</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-eye"></i> Data Preview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="showDataPreview()">
+                            <i class="bi bi-table"></i> View Sample Data
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" onclick="refreshDataInfo()">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh Info
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Data Preview Area -->
+    <div id="data-preview" class="card mb-4" style="display: none;">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5><i class="bi bi-table"></i> Data Sample</h5>
+                <button class="btn btn-outline-secondary btn-sm" onclick="hideDataPreview()">
+                    <i class="bi bi-x"></i> Hide
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="data-table" class="table-responsive"></div>
+        </div>
+    </div>
+    
+    <!-- Operation Results -->
+    <div id="operation-results" class="fade-in"></div>
+    
+{% endif %}
+
+<!-- Preprocessing Operation Modal -->
+<div class="modal fade" id="preprocessingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark">
+            <div class="modal-header">
+                <h5 class="modal-title" id="preprocessingModalLabel">Preprocessing Operation</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="preprocessingForm">
+                    <div id="preprocessing-options"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="applyOperation()" id="apply-btn">
+                    <i class="bi bi-check"></i> Apply
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Global variables
+let currentOperation = '';
+let currentParams = {};
+const numericColumns = {{ numeric_columns|safe }};
+const categoricalColumns = {{ categorical_columns|safe }};
+const allColumns = {{ all_columns|safe }};
+
+// Show preprocessing modal
+function showPreprocessingModal(operation) {
+    currentOperation = operation;
+    document.getElementById('preprocessingModalLabel').textContent = getOperationTitle(operation);
+    
+    let optionsHtml = '';
+    
+    switch(operation) {
+        case 'select_columns':
+            optionsHtml = `
+                <div class="mb-3">
+                    <label class="form-label">Select Columns to Keep</label>
+                    <select class="form-select" id="columns" multiple size="8" required>
+                        ${allColumns.map(col => `<option value="${col}">${col}</option>`).join('')}
+                    </select>
+                    <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple columns</small>
+                </div>
+            `;
+            break;
+            
+        case 'drop_columns':
+            optionsHtml = `
+                <div class="mb-3">
+                    <label class="form-label">Select Columns to Drop</label>
+                    <select class="form-select" id="columns" multiple size="8" required>
+                        ${allColumns.map(col => `<option value="${col}">${col}</option>`).join('')}
+                    </select>
+                    <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple columns</small>
+                </div>
+            `;
+            break;
+            
+        case 'replace_values':
+            optionsHtml = `
+                <div class="mb-3">
+                    <label class="form-label">Column</label>
+                    <select class="form-select" id="column" onchange="loadColumnValues()" required>
+                        <option value="">Select column...</option>
+                        ${allColumns.map(col => `<option value="${col}">${col}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Current Value</label>
+                    <select class="form-select" id="old_value" disabled required>
+                        <option value="">Select column first...</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">New Value</label>
+                    <input type="text" class="form-control" id="new_value" required>
+                </div>
+            `;
+            break;
+            
+        case 'drop_missing':
+            optionsHtml = `
+                <div class="mb-3">
+                    <label class="form-label">Drop Method</label>
+                    <select class="form-select" id="how" required>
+                        <option value="any">Drop rows with any missing values</option>
+                        <option value="all">Drop rows with all missing values</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Specific Columns (Optional)</label>
+                    <select class="form-select" id="subset" multiple>
+                        ${allColumns.map(col => `<option value="${col}">${col}</option>`).join('')}
+                    </select>
+                    <small class="form-text text-muted">Leave empty to consider all columns</small>
+                </div>
+            `;
+            break;
+            
+        case 'fill_missing':
+            optionsHtml = `
+                <div class="mb-3">
+                    <label class="form-label">Fill Method</label>
+                    <select class="form-select" id="method" onchange="toggleConstantValue()" required>
+                        <option value="mean">Mean (numeric columns only)</option>
+                        <option value="median">Median (numeric columns only)</option>
+                        <option value="mode">Mode (most frequent value)</option>
+                        <option value="forward">Forward fill</option>
+                        <option value="backward">Backward fill</option>
+                        <option value="constant">Constant value</option>
+                    </select>
+                </div>
+                <div class="mb-3" id="constant-value-group" style="display: none;">
+                    <label class="form-label">Constant Value</label>
+                    <input type="text" class="form-control" id="constant_value" value="0">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Columns to Fill</label>
+                    <select class="form-select" id="columns" multiple size="6" required>
+                        ${allColumns.map(col => `<option value="${col}">${col}</option>`).join('')}
+                    </select>
+                    <small class="form-text text-muted">Select columns with missing values</small>
+                </div>
+            `;
+            break;
+            
+        case 'filter_data':
+            optionsHtml = `
+                <div class="mb-3">
+                    <label class="form-label">Filters</label>
+                    <div id="filters-container">
+                        <div class="filter-row mb-2">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <select class="form-select filter-column">
+                                        <option value="">Select column...</option>
+                                        ${allColumns.map(col => `<option value="${col}">${col}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select filter-operator">
+                                        <option value="equals">Equals</option>
+                                        <option value="not_equals">Not Equals</option>
+                                        <option value="contains">Contains</option>
+                                        <option value="greater_than">Greater Than</option>
+                                        <option value="less_than">Less Than</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control filter-value" placeholder="Value">
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeFilterRow(this)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addFilterRow()">
+                        <i class="bi bi-plus"></i> Add Filter
+                    </button>
+                </div>
+            `;
+            break;
+    }
+    
+    document.getElementById('preprocessing-options').innerHTML = optionsHtml;
+    new bootstrap.Modal(document.getElementById('preprocessingModal')).show();
+}
+
+// Get operation title
+function getOperationTitle(operation) {
+    const titles = {
+        'select_columns': 'Select Columns',
+        'drop_columns': 'Drop Columns', 
+        'replace_values': 'Replace Values',
+        'drop_missing': 'Drop Missing Values',
+        'fill_missing': 'Fill Missing Values',
+        'filter_data': 'Filter Data'
+    };
+    return titles[operation] || 'Preprocessing Operation';
+}
+
+// Load column values for replacement
+function loadColumnValues() {
+    const column = document.getElementById('column').value;
+    const oldValueSelect = document.getElementById('old_value');
+    
+    if (!column) {
+        oldValueSelect.innerHTML = '<option value="">Select column first...</option>';
+        oldValueSelect.disabled = true;
+        return;
+    }
+    
+    oldValueSelect.innerHTML = '<option value="">Loading values...</option>';
+    oldValueSelect.disabled = true;
+    
+    fetch('{% url "preprocessing:get_column_values" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({column: column})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            oldValueSelect.innerHTML = '<option value="">Select value to replace...</option>';
+            data.values.forEach(value => {
+                oldValueSelect.innerHTML += `<option value="${value}">${value}</option>`;
+            });
+            oldValueSelect.disabled = false;
+            
+            if (data.has_more) {
+                oldValueSelect.innerHTML += '<option disabled>... showing first 100 values</option>';
+            }
+        } else {
+            oldValueSelect.innerHTML = '<option value="">Error loading values</option>';
+            showAlert(data.error, 'danger');
+        }
+    })
+    .catch(error => {
+        oldValueSelect.innerHTML = '<option value="">Error loading values</option>';
+        showAlert('Error loading column values', 'danger');
+    });
+}
+
+// Toggle constant value input
+function toggleConstantValue() {
+    const method = document.getElementById('method').value;
+    const constantGroup = document.getElementById('constant-value-group');
+    constantGroup.style.display = method === 'constant' ? 'block' : 'none';
+}
+
+// Add filter row
+function addFilterRow() {
+    const container = document.getElementById('filters-container');
+    const filterRow = document.createElement('div');
+    filterRow.className = 'filter-row mb-2';
+    filterRow.innerHTML = `
+        <div class="row">
+            <div class="col-md-4">
+                <select class="form-select filter-column">
+                    <option value="">Select column...</option>
+                    ${allColumns.map(col => `<option value="${col}">${col}</option>`).join('')}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select filter-operator">
+                    <option value="equals">Equals</option>
+                    <option value="not_equals">Not Equals</option>
+                    <option value="contains">Contains</option>
+                    <option value="greater_than">Greater Than</option>
+                    <option value="less_than">Less Than</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <input type="text" class="form-control filter-value" placeholder="Value">
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeFilterRow(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    container.appendChild(filterRow);
+}
+
+// Remove filter row
+function removeFilterRow(button) {
+    button.closest('.filter-row').remove();
+}
+
+// Apply operation
+function applyOperation() {
+    const params = collectFormParams();
+    if (!params) return;
+    
+    currentParams = params;
+    applyPreprocessing(currentOperation, params);
+}
+
+// Collect form parameters
+function collectFormParams() {
+    const params = {};
+    
+    switch(currentOperation) {
+        case 'select_columns':
+        case 'drop_columns':
+            const selectedColumns = Array.from(document.getElementById('columns').selectedOptions).map(opt => opt.value);
+            if (selectedColumns.length === 0) {
+                showAlert('Please select at least one column', 'warning');
+                return null;
+            }
+            params.columns = selectedColumns;
+            break;
+            
+        case 'replace_values':
+            params.column = document.getElementById('column').value;
+            params.old_value = document.getElementById('old_value').value;
+            params.new_value = document.getElementById('new_value').value;
+            
+            if (!params.column || !params.old_value || params.new_value === '') {
+                showAlert('Please fill in all fields', 'warning');
+                return null;
+            }
+            break;
+            
+        case 'drop_missing':
+            params.how = document.getElementById('how').value;
+            const subset = Array.from(document.getElementById('subset').selectedOptions).map(opt => opt.value);
+            if (subset.length > 0) {
+                params.subset = subset;
+            }
+            break;
+            
+        case 'fill_missing':
+            params.method = document.getElementById('method').value;
+            params.columns = Array.from(document.getElementById('columns').selectedOptions).map(opt => opt.value);
+            
+            if (params.columns.length === 0) {
+                showAlert('Please select at least one column to fill', 'warning');
+                return null;
+            }
+            
+            if (params.method === 'constant') {
+                params.constant_value = document.getElementById('constant_value').value;
+            }
+            break;
+            
+        case 'filter_data':
+            const filters = [];
+            document.querySelectorAll('.filter-row').forEach(row => {
+                const column = row.querySelector('.filter-column').value;
+                const operator = row.querySelector('.filter-operator').value;
+                const value = row.querySelector('.filter-value').value;
+                
+                if (column && value) {
+                    filters.push({column, operator, value});
+                }
+            });
+            
+            if (filters.length === 0) {
+                showAlert('Please add at least one filter', 'warning');
+                return null;
+            }
+            
+            params.filters = filters;
+            break;
+    }
+    
+    return params;
+}
+
+// Apply preprocessing operation
+function applyPreprocessing(operation, params) {
+    bootstrap.Modal.getInstance(document.getElementById('preprocessingModal')).hide();
+    
+    const resultsContainer = document.getElementById('operation-results');
+    resultsContainer.innerHTML = `
+        <div class="alert alert-info">
+            <div class="d-flex align-items-center">
+                <div class="spinner-border spinner-border-sm me-2" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                Applying ${getOperationTitle(operation).toLowerCase()}...
+            </div>
+        </div>
+    `;
+    
+    fetch('{% url "preprocessing:apply_preprocessing" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({
+            operation: operation,
+            params: params
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            resultsContainer.innerHTML = `
+                <div class="alert alert-success alert-dismissible fade show">
+                    <i class="bi bi-check-circle"></i> ${data.message}
+                    <br><small>New shape: ${data.new_shape[0]} rows × ${data.new_shape[1]} columns</small>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            // Update dataset info
+            document.getElementById('current-shape').textContent = `${data.new_shape[0]} rows × ${data.new_shape[1]} columns`;
+            if (data.new_info && data.new_info.total_nulls !== undefined) {
+                document.getElementById('missing-count').textContent = data.new_info.total_nulls;
+            }
+            
+            // Update sample data table if available
+            if (data.sample_data && data.columns) {
+                updateSampleDataTable(data.sample_data, data.columns);
+            }
+            
+        } else {
+            resultsContainer.innerHTML = `
+                <div class="alert alert-danger alert-dismissible fade show">
+                    <i class="bi bi-exclamation-triangle"></i> ${data.error}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        resultsContainer.innerHTML = `
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="bi bi-exclamation-triangle"></i> Error applying operation
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+    });
+}
+
+// Show data preview
+function showDataPreview() {
+    const previewDiv = document.getElementById('data-preview');
+    const tableDiv = document.getElementById('data-table');
+    
+    tableDiv.innerHTML = '<div class="text-center p-3"><div class="spinner-border text-primary"></div><p class="mt-2">Loading data...</p></div>';
+    previewDiv.style.display = 'block';
+    
+    // Create sample data table
+    const sampleData = {{ sample_data|safe }};
+    if (sampleData.length > 0) {
+        let tableHtml = '<table class="table table-dark table-striped table-hover"><thead><tr>';
+        Object.keys(sampleData[0]).forEach(key => {
+            tableHtml += `<th>${key}</th>`;
+        });
+        tableHtml += '</tr></thead><tbody>';
+        
+        sampleData.forEach(row => {
+            tableHtml += '<tr>';
+            Object.values(row).forEach(value => {
+                tableHtml += `<td>${value}</td>`;
+            });
+            tableHtml += '</tr>';
+        });
+        tableHtml += '</tbody></table>';
+        
+        tableDiv.innerHTML = tableHtml;
+    } else {
+        tableDiv.innerHTML = '<div class="alert alert-warning">No data available</div>';
+    }
+}
+
+// Hide data preview
+function hideDataPreview() {
+    document.getElementById('data-preview').style.display = 'none';
+}
+
+// Refresh data info
+function refreshDataInfo() {
+    location.reload();
+}
+
+// Enhanced export data with progress tracking
+function exportProcessedData(format) {
+    const downloadBtn = event.target;
+    const originalText = downloadBtn.innerHTML;
+    
+    // Disable button and show loading
+    downloadBtn.disabled = true;
+    downloadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Preparing...';
+    
+    // Create progress modal
+    showExportProgress(format);
+    
+    // Simulate progress steps
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += Math.random() * 20;
+        if (progress > 90) {
+            progress = 90;
+        }
+        updateExportProgress(progress, 'Processing data...');
+    }, 200);
+    
+    // Start actual download
+    fetch(`{% url "preprocessing:export_data" "placeholder" %}`.replace('placeholder', format), {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        }
+    })
+    .then(response => {
+        clearInterval(progressInterval);
+        
+        if (!response.ok) {
+            throw new Error(`Export failed: ${response.statusText}`);
+        }
+        
+        updateExportProgress(95, 'Finalizing download...');
+        return response.blob();
+    })
+    .then(blob => {
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const downloadLink = document.createElement('a');
+        downloadLink.href = url;
+        downloadLink.download = `processed_data_${new Date().toISOString().split('T')[0]}.${format}`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        window.URL.revokeObjectURL(url);
+        
+        // Complete progress
+        updateExportProgress(100, 'Download complete!');
+        
+        setTimeout(() => {
+            hideExportProgress();
+            showAlert(`Data exported successfully as ${format.toUpperCase()}!`, 'success');
+        }, 1000);
+    })
+    .catch(error => {
+        clearInterval(progressInterval);
+        console.error('Export error:', error);
+        hideExportProgress();
+        showAlert(`Export failed: ${error.message}`, 'danger');
+    })
+    .finally(() => {
+        // Reset button
+        downloadBtn.disabled = false;
+        downloadBtn.innerHTML = originalText;
+    });
+}
+
+// Show export progress modal
+function showExportProgress(format) {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('exportProgressModal');
+    if (!modal) {
+        const modalHtml = `
+            <div class="modal fade" id="exportProgressModal" tabindex="-1" data-bs-backdrop="static">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content bg-dark">
+                        <div class="modal-header border-secondary">
+                            <h5 class="modal-title">
+                                <i class="bi bi-download me-2"></i>Exporting Data
+                            </h5>
+                        </div>
+                        <div class="modal-body text-center">
+                            <div class="mb-3">
+                                <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
+                            </div>
+                            <h6 id="export-format-text">Preparing ${format.toUpperCase()} export...</h6>
+                            <div class="progress mt-3" style="height: 8px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     id="export-progress-bar" role="progressbar" style="width: 0%">
+                                </div>
+                            </div>
+                            <p class="mt-2 text-muted" id="export-status-text">Initializing...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        modal = document.getElementById('exportProgressModal');
+    }
+    
+    // Update format text
+    document.getElementById('export-format-text').textContent = `Preparing ${format.toUpperCase()} export...`;
+    
+    // Show modal
+    new bootstrap.Modal(modal).show();
+}
+
+// Update export progress
+function updateExportProgress(percent, statusText) {
+    const progressBar = document.getElementById('export-progress-bar');
+    const statusElement = document.getElementById('export-status-text');
+    
+    if (progressBar) {
+        progressBar.style.width = `${percent}%`;
+        progressBar.setAttribute('aria-valuenow', percent);
+    }
+    
+    if (statusElement) {
+        statusElement.textContent = statusText;
+    }
+}
+
+// Hide export progress modal
+function hideExportProgress() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('exportProgressModal'));
+    if (modal) {
+        modal.hide();
+    }
+}
+
+// Update sample data table
+function updateSampleDataTable(sampleData, columns) {
+    const tableContainer = document.querySelector('#data-table');
+    
+    if (!tableContainer) {
+        // If table container doesn't exist, we'll refresh the page
+        setTimeout(() => location.reload(), 1000);
+        return;
+    }
+    
+    if (sampleData.length === 0) {
+        tableContainer.innerHTML = '<div class="alert alert-warning">No data available</div>';
+        return;
+    }
+    
+    // Create updated table HTML
+    let tableHtml = `
+        <div class="table-responsive">
+            <table class="table table-dark table-striped table-hover">
+                <thead>
+                    <tr>`;
+    
+    columns.forEach(col => {
+        tableHtml += `<th>${col}</th>`;
+    });
+    
+    tableHtml += `</tr>
+                </thead>
+                <tbody>`;
+    
+    sampleData.forEach(row => {
+        tableHtml += '<tr>';
+        columns.forEach(col => {
+            const value = row[col];
+            if (value === null || value === undefined) {
+                tableHtml += '<td><span class="text-warning">NULL</span></td>';
+            } else {
+                tableHtml += `<td>${value}</td>`;
+            }
+        });
+        tableHtml += '</tr>';
+    });
+    
+    tableHtml += `</tbody>
+            </table>
+        </div>`;
+    
+    // Show the data preview if it's hidden
+    const previewDiv = document.getElementById('data-preview');
+    if (previewDiv) {
+        previewDiv.style.display = 'block';
+    }
+    
+    // Update the table with animation
+    tableContainer.style.opacity = '0.5';
+    setTimeout(() => {
+        tableContainer.innerHTML = tableHtml;
+        tableContainer.style.opacity = '1';
+        tableContainer.style.transition = 'opacity 0.3s ease-in-out';
+    }, 200);
+}
+
+// Reset data to original
+function resetData() {
+    if (confirm('This will reset the dataset to its original state. All preprocessing changes will be lost. Continue?')) {
+        applyPreprocessing('reset_data', {});
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,111 @@
+<div class="card mb-3">
+    <div class="card-header">
+        <h5><i class="bi bi-table"></i> Dataset Preview</h5>
+        <small class="text-muted">Showing {{ showing_rows }} of {{ total_rows }} rows</small>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+            <table class="table table-dark table-striped table-hover mb-0">
+                <thead class="sticky-top">
+                    <tr>
+                        <th scope="col" class="text-center">#</th>
+                        {% for column in columns %}
+                        <th scope="col" class="text-nowrap">{{ column }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                    <tr>
+                        <td class="text-center text-muted">{{ forloop.counter }}</td>
+                        {% for value in row %}
+                        <td class="text-nowrap">
+                            {% if value == None or value == 'nan' or value == 'NaN' %}
+                                <span class="text-warning">NULL</span>
+                            {% elif value|length > 50 %}
+                                <span title="{{ value }}">{{ value|truncatechars:50 }}</span>
+                            {% else %}
+                                {{ value }}
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if total_rows > showing_rows %}
+        <div class="card-footer text-center">
+            <small class="text-muted">
+                <i class="bi bi-info-circle"></i>
+                Showing first {{ showing_rows }} rows only. Total dataset has {{ total_rows }} rows.
+            </small>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+/* Custom styles for the data table */
+.table-responsive {
+    border: 1px solid #3a3b4a;
+    border-radius: 0.375rem;
+}
+
+.table thead th {
+    background-color: #1e1e1e !important;
+    color: #f8f9fa !important;
+    border-bottom: 2px solid #3a3b4a;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 12px 8px;
+}
+
+.table tbody td {
+    color: #e1e5e9 !important;
+    border-color: #3a3b4a;
+    padding: 8px;
+    font-size: 0.85rem;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.table tbody tr:hover {
+    background-color: #2c2d38 !important;
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #262730 !important;
+}
+
+.table tbody tr:nth-child(odd) {
+    background-color: #1e1f2a !important;
+}
+
+/* Sticky header */
+.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Scrollbar styling */
+.table-responsive::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #262730;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #3a3b4a;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #4a4b5a;
+}
+</style>

@@ -1,2 +1,120 @@
+# Django EDA Application - Git Ignore File
+# ==========================================
+
+
+.claude/
+# Python Cache
 __pycache__/
-.ipynbcheckpoints/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# Django specific
+*.log
+db.sqlite3
+db.sqlite3-journal
+/staticfiles/
+/media/
+*.pot
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.pytest_cache/
+.hypothesis/
+coverage.xml
+*.cover
+.cache
+nosetests.xml
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
+*.egg
+*.whl
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Documentation builds
+docs/_build/
+site/
+
+# Logs
+logs/*.log
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
+*.swp
+*~
+
+# Development databases (keep for local dev, exclude from production)
+# db.sqlite3
+
+# Collected static files (generated, not source)
+staticfiles/
+
+# User-uploaded files
+media/
+
+# Local development settings
+local_settings.py
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Redis dump
+dump.rdb
+
+# AWS
+.elasticbeanstalk/
+.ebextensions/
+
+# Deployment
+*.pem
+*.key
+secrets.json
+
+# Analysis and temporary documentation files (not needed in repo)
+*_SUMMARY.md
+*_REPORT.md
+COMPREHENSIVE_*.md

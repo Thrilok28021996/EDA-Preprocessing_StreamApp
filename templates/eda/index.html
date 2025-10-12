@@ -1,0 +1,1024 @@
+{% extends 'base.html' %}
+
+{% block title %}EDA - Exploratory Data Analysis{% endblock %}
+
+{% block sidebar_title %}EDA Options{% endblock %}
+
+{% block sidebar_content %}
+{% if not no_data %}
+<div class="list-group list-group-flush">
+    <!-- Chart Generation -->
+    <div class="list-group-item bg-dark text-light border-secondary">
+        <h6 class="mb-2">📊 Charts</h6>
+        <div class="row g-1">
+            <div class="col-6">
+                <button class="btn btn-outline-primary btn-sm w-100" onclick="showChartModal('bar')">
+                    Bar Chart
+                </button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-outline-primary btn-sm w-100" onclick="showChartModal('line')">
+                    Line Chart
+                </button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-outline-primary btn-sm w-100" onclick="showChartModal('histogram')">
+                    Histogram
+                </button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-outline-primary btn-sm w-100" onclick="showChartModal('pie')">
+                    Pie Chart
+                </button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-outline-primary btn-sm w-100" onclick="showChartModal('scatter')">
+                    Scatter Plot
+                </button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-outline-primary btn-sm w-100" onclick="showChartModal('box')">
+                    Box Plot
+                </button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-outline-primary btn-sm w-100" onclick="showChartModal('heatmap')">
+                    Heatmap
+                </button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-outline-primary btn-sm w-100" onclick="showChartModal('area')">
+                    Area Chart
+                </button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-outline-primary btn-sm w-100" onclick="showChartModal('violin')">
+                    Violin Plot
+                </button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-outline-primary btn-sm w-100" onclick="showChartModal('donut')">
+                    Donut Chart
+                </button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-outline-primary btn-sm w-100" onclick="showChartModal('bubble')">
+                    Bubble Chart
+                </button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-outline-primary btn-sm w-100" onclick="showChartModal('treemap')">
+                    Treemap
+                </button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-outline-primary btn-sm w-100" onclick="showChartModal('sunburst')">
+                    Sunburst
+                </button>
+            </div>
+            <div class="col-6">
+                <button class="btn btn-outline-primary btn-sm w-100" onclick="showChartModal('radar')">
+                    Radar Chart
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Data Analysis -->
+    <div class="list-group-item bg-dark text-light border-secondary">
+        <h6 class="mb-2">🔍 Analysis</h6>
+        <div class="d-grid gap-1">
+            <button class="btn btn-outline-success btn-sm" onclick="performAnalysis('show_data')">
+                Show Data
+            </button>
+            <button class="btn btn-outline-success btn-sm" onclick="performAnalysis('missing_values')">
+                Missing Values
+            </button>
+            <button class="btn btn-outline-success btn-sm" onclick="performAnalysis('duplicates')">
+                Find Duplicates
+            </button>
+            <button class="btn btn-outline-success btn-sm" onclick="showAnalysisModal('outliers')">
+                Find Outliers
+            </button>
+            <button class="btn btn-outline-success btn-sm" onclick="performAnalysis('data_types')">
+                Data Types
+            </button>
+        </div>
+    </div>
+</div>
+{% else %}
+{{ block.super }}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="display-4 text-primary mb-4">Exploratory Data Analysis</h1>
+        <p class="lead">Welcome to Exploratory Data Analysis Page!</p>
+    </div>
+</div>
+
+{% if no_data %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i>
+        <strong>No Data Found!</strong> Please upload a CSV file in the Home Page to get started.
+    </div>
+    <div class="text-center">
+        <a href="{% url 'home:index' %}" class="btn btn-primary">
+            <i class="bi bi-house"></i> Go to Home Page
+        </a>
+    </div>
+{% else %}
+    <!-- Dataset Overview -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-info-circle"></i> Dataset Info</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><strong>Filename:</strong> {{ request.session.df_filename }}</li>
+                        <li><strong>Shape:</strong> {{ df_info.shape.0 }} rows × {{ df_info.shape.1 }} columns</li>
+                        <li><strong>Memory Usage:</strong> {{ df_info.memory_usage|filesizeformat }}</li>
+                        <li><strong>Total Nulls:</strong> <span class="badge bg-warning">{{ df_info.total_nulls }}</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-bar-chart"></i> Column Types</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><strong>Numeric:</strong> <span class="badge bg-success">{{ numeric_columns|length }}</span></li>
+                        <li><strong>Categorical:</strong> <span class="badge bg-primary">{{ categorical_columns|length }}</span></li>
+                        <li><strong>Total:</strong> <span class="badge bg-info">{{ all_columns|length }}</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-gear"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="performAnalysis('show_data')">
+                            <i class="bi bi-table"></i> View Data
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" onclick="performAnalysis('data_types')">
+                            <i class="bi bi-list-columns"></i> Column Info
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chart Display Area -->
+    <div id="chart-container" class="chart-container" style="display: none;">
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 id="chart-title">Chart</h5>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="clearChart()">
+                        <i class="bi bi-x"></i> Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="chart-plot" style="height: 500px;"></div>
+    </div>
+    
+    <!-- Analysis Results Area -->
+    <div id="analysis-results" class="fade-in"></div>
+    
+{% endif %}
+
+<!-- Chart Configuration Modal -->
+<div class="modal fade" id="chartModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark">
+            <div class="modal-header">
+                <h5 class="modal-title" id="chartModalLabel">Generate Chart</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="chartForm">
+                    <div id="chart-options"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-chart-generate" onclick="generateChart()">
+                    <i class="bi bi-graph-up"></i> Generate Chart
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analysis Configuration Modal -->
+<div class="modal fade" id="analysisModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark">
+            <div class="modal-header">
+                <h5 class="modal-title" id="analysisModalLabel">Data Analysis</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="analysisForm">
+                    <div id="analysis-options"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="runAnalysis()">Run Analysis</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Global variables
+let currentChartType = '';
+let currentAnalysisType = '';
+const numericColumns = {{ numeric_columns|safe }};
+const categoricalColumns = {{ categorical_columns|safe }};
+const allColumns = {{ all_columns|safe }};
+
+// Helper function to get column data type
+function getColumnDataType(columnName) {
+    if (numericColumns.includes(columnName)) return 'numeric';
+    if (categoricalColumns.includes(columnName)) return 'categorical';
+    return 'unknown';
+}
+
+// Helper function to create column options with data type indicators
+function createColumnOptions(columns, showDataType = true) {
+    return columns.map(col => {
+        const dataType = getColumnDataType(col);
+        const displayText = showDataType ? `${col} (${dataType})` : col;
+        return `<option value="${col}">${displayText}</option>`;
+    }).join('');
+}
+
+// Chart generation functions
+function showChartModal(chartType) {
+    currentChartType = chartType;
+    document.getElementById('chartModalLabel').textContent = `Generate ${chartType.charAt(0).toUpperCase() + chartType.slice(1)} Chart`;
+    
+    let optionsHtml = '';
+    
+    if (chartType === 'bar' || chartType === 'line') {
+        optionsHtml = `
+            <div class="mb-3">
+                <label class="form-label">Chart Mode</label>
+                <select class="form-select" id="chart_mode" onchange="toggleChartMode('${chartType}')">
+                    <option value="frequency">Frequency Count</option>
+                    <option value="custom">Custom Values</option>
+                </select>
+                <small class="form-text text-muted">Frequency: Count occurrences | Custom: Use actual column values</small>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">X-axis Column</label>
+                <select class="form-select" id="x_column" required>
+                    <option value="">Select column...</option>
+                    ${createColumnOptions(allColumns)}
+                </select>
+            </div>
+            <div class="mb-3" id="y_column_section" style="display:none;">
+                <label class="form-label">Y-axis Column</label>
+                <select class="form-select" id="y_column">
+                    <option value="">Select column...</option>
+                    ${createColumnOptions(numericColumns)}
+                </select>
+            </div>
+            <div class="mb-3" id="aggregation_section" style="display:none;">
+                <label class="form-label">Aggregation Method</label>
+                <select class="form-select" id="aggregation">
+                    <option value="mean">Average (Mean)</option>
+                    <option value="sum">Sum</option>
+                    <option value="median">Median</option>
+                </select>
+            </div>
+        `;
+    } else if (chartType === 'histogram') {
+        optionsHtml = `
+            <div class="mb-3">
+                <label class="form-label">Column</label>
+                <select class="form-select" id="column" required>
+                    <option value="">Select column...</option>
+                    ${createColumnOptions(numericColumns)}
+                </select>
+                <small class="form-text text-muted">Histograms work best with numeric columns</small>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Number of Bins</label>
+                <select class="form-select" id="bins" onchange="toggleCustomBins()">
+                    <option value="auto">Auto</option>
+                    <option value="10">10 bins</option>
+                    <option value="20">20 bins</option>
+                    <option value="30">30 bins</option>
+                    <option value="50">50 bins</option>
+                    <option value="custom">Custom</option>
+                </select>
+            </div>
+            <div class="mb-3" id="custom_bins_section" style="display:none;">
+                <label class="form-label">Custom Bin Count</label>
+                <input type="number" class="form-control" id="bin_size" min="5" max="100" value="20">
+            </div>
+        `;
+    } else if (chartType === 'pie' || chartType === 'donut') {
+        optionsHtml = `
+            <div class="mb-3">
+                <label class="form-label">Column</label>
+                <select class="form-select" id="column" required>
+                    <option value="">Select column...</option>
+                    ${createColumnOptions(categoricalColumns)}
+                </select>
+                <small class="form-text text-muted">Pie charts work best with categorical columns</small>
+            </div>
+        `;
+    } else if (chartType === 'box' || chartType === 'violin') {
+        optionsHtml = `
+            <div class="mb-3">
+                <label class="form-label">Column (Numeric)</label>
+                <select class="form-select" id="column" required>
+                    <option value="">Select column...</option>
+                    ${createColumnOptions(numericColumns)}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Group By (Optional)</label>
+                <select class="form-select" id="group_by">
+                    <option value="">No grouping</option>
+                    ${createColumnOptions(categoricalColumns)}
+                </select>
+                <small class="form-text text-muted">Group by a categorical column to compare distributions</small>
+            </div>
+        `;
+    } else if (chartType === 'scatter' || chartType === 'area') {
+        optionsHtml = `
+            <div class="mb-3">
+                <label class="form-label">X-axis Column</label>
+                <select class="form-select" id="x_column" required>
+                    <option value="">Select column...</option>
+                    ${createColumnOptions(allColumns)}
+                </select>
+                <small class="form-text text-muted">Numeric columns work best for scatter plots</small>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Y-axis Column</label>
+                <select class="form-select" id="y_column" required>
+                    <option value="">Select column...</option>
+                    ${createColumnOptions(numericColumns)}
+                </select>
+            </div>
+        `;
+    } else if (chartType === 'bubble') {
+        optionsHtml = `
+            <div class="mb-3">
+                <label class="form-label">X-axis Column</label>
+                <select class="form-select" id="x_column" required>
+                    <option value="">Select column...</option>
+                    ${createColumnOptions(numericColumns)}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Y-axis Column</label>
+                <select class="form-select" id="y_column" required>
+                    <option value="">Select column...</option>
+                    ${createColumnOptions(numericColumns)}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Size Column</label>
+                <select class="form-select" id="size_column" required>
+                    <option value="">Select column...</option>
+                    ${createColumnOptions(numericColumns)}
+                </select>
+            </div>
+        `;
+    } else if (chartType === 'treemap' || chartType === 'sunburst') {
+        optionsHtml = `
+            <div class="mb-3">
+                <label class="form-label">Category Column</label>
+                <select class="form-select" id="category_column" required>
+                    <option value="">Select column...</option>
+                    ${createColumnOptions(categoricalColumns)}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Value Column (optional)</label>
+                <select class="form-select" id="value_column">
+                    <option value="">Count occurrences</option>
+                    ${createColumnOptions(numericColumns)}
+                </select>
+                <small class="form-text text-muted">Leave empty to count category occurrences</small>
+            </div>
+        `;
+    } else if (chartType === 'radar') {
+        optionsHtml = `
+            <div class="mb-3">
+                <label class="form-label">Numeric Columns</label>
+                <select class="form-select" id="radar_columns" multiple required>
+                    ${createColumnOptions(numericColumns, false)}
+                </select>
+                <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple numeric columns</small>
+            </div>
+        `;
+    } else if (chartType === 'heatmap') {
+        optionsHtml = `
+            <div class="mb-3">
+                <label class="form-label">Columns (Leave empty for all numeric columns)</label>
+                <select class="form-select" id="columns" multiple>
+                    ${createColumnOptions(numericColumns, false)}
+                </select>
+                <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple columns. Empty = all numeric columns</small>
+            </div>
+        `;
+    }
+    
+    document.getElementById('chart-options').innerHTML = optionsHtml;
+    new bootstrap.Modal(document.getElementById('chartModal')).show();
+}
+
+// Toggle functions for dynamic form elements
+function toggleChartMode(chartType) {
+    const mode = document.getElementById('chart_mode').value;
+    const yColumnSection = document.getElementById('y_column_section');
+    const aggregationSection = document.getElementById('aggregation_section');
+    
+    if (mode === 'custom') {
+        yColumnSection.style.display = 'block';
+        aggregationSection.style.display = 'block';
+    } else {
+        yColumnSection.style.display = 'none';
+        aggregationSection.style.display = 'none';
+    }
+}
+
+function toggleCustomBins() {
+    const bins = document.getElementById('bins').value;
+    const customSection = document.getElementById('custom_bins_section');
+    
+    if (bins === 'custom') {
+        customSection.style.display = 'block';
+    } else {
+        customSection.style.display = 'none';
+    }
+}
+
+// Validation function
+function validateChartConfiguration(chartType, options) {
+    const warnings = [];
+    
+    if (chartType === 'scatter' || chartType === 'area') {
+        if (options.x_column && !numericColumns.includes(options.x_column)) {
+            warnings.push(`X-axis column "${options.x_column}" is not numeric. Consider using a numeric column for better visualization.`);
+        }
+    }
+    
+    if (chartType === 'histogram' && options.column && !numericColumns.includes(options.column)) {
+        warnings.push(`Column "${options.column}" is not numeric. Histograms work best with numeric data.`);
+    }
+    
+    if ((chartType === 'pie' || chartType === 'donut') && options.column && numericColumns.includes(options.column)) {
+        warnings.push(`Column "${options.column}" is numeric. Pie charts work better with categorical data.`);
+    }
+    
+    return warnings;
+}
+
+function generateChart() {
+    const options = {};
+    
+    // Collect form data based on chart type
+    if (currentChartType === 'bar' || currentChartType === 'line') {
+        options.x_column = document.getElementById('x_column').value;
+        options.chart_mode = document.getElementById('chart_mode').value;
+        
+        if (options.chart_mode === 'custom') {
+            options.y_column = document.getElementById('y_column').value;
+            options.aggregation = document.getElementById('aggregation').value;
+        }
+    } else if (currentChartType === 'histogram') {
+        options.column = document.getElementById('column').value;
+        options.bins = document.getElementById('bins').value;
+        if (options.bins === 'custom') {
+            options.bin_size = document.getElementById('bin_size').value;
+        }
+    } else if (currentChartType === 'pie' || currentChartType === 'donut') {
+        options.column = document.getElementById('column').value;
+    } else if (currentChartType === 'box' || currentChartType === 'violin') {
+        options.column = document.getElementById('column').value;
+        options.group_by = document.getElementById('group_by').value;
+    } else if (currentChartType === 'scatter' || currentChartType === 'area') {
+        options.x_column = document.getElementById('x_column').value;
+        options.y_column = document.getElementById('y_column').value;
+    } else if (currentChartType === 'bubble') {
+        options.x_column = document.getElementById('x_column').value;
+        options.y_column = document.getElementById('y_column').value;
+        options.size_column = document.getElementById('size_column').value;
+    } else if (currentChartType === 'treemap' || currentChartType === 'sunburst') {
+        options.category_column = document.getElementById('category_column').value;
+        options.value_column = document.getElementById('value_column').value;
+    } else if (currentChartType === 'radar') {
+        const selectedColumns = Array.from(document.getElementById('radar_columns').selectedOptions).map(opt => opt.value);
+        options.columns = selectedColumns;
+    } else if (currentChartType === 'heatmap') {
+        const selectedColumns = Array.from(document.getElementById('columns').selectedOptions).map(opt => opt.value);
+        options.columns = selectedColumns;
+    }
+    
+    // Validate configuration and show warnings
+    const warnings = validateChartConfiguration(currentChartType, options);
+    if (warnings.length > 0) {
+        warnings.forEach(warning => showToast(warning, 'warning'));
+    }
+    
+    // Validate required fields
+    const requiredFields = Object.values(options).filter(val => val !== undefined && val !== '');
+    const skipValidation = ['heatmap', 'radar'];
+    
+    if (!skipValidation.includes(currentChartType) && requiredFields.length === 0) {
+        showAlert('Please fill in all required fields.', 'warning');
+        return;
+    }
+    
+    console.log('Chart validation passed:', currentChartType, options);
+    
+    // Show chart container and set title
+    document.getElementById('chart-container').style.display = 'block';
+    document.getElementById('chart-title').textContent = `${currentChartType.charAt(0).toUpperCase() + currentChartType.slice(1)} Chart`;
+    
+    // Show loading with timeout protection
+    const plotContainer = document.getElementById('chart-plot');
+    plotContainer.innerHTML = `
+        <div class="d-flex justify-content-center align-items-center" style="height: 300px;">
+            <div class="text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5>Generating ${currentChartType.charAt(0).toUpperCase() + currentChartType.slice(1)} Chart</h5>
+                <p class="text-muted">Please wait...</p>
+            </div>
+        </div>
+    `;
+    
+    // Set timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+        plotContainer.innerHTML = `
+            <div class="alert alert-warning">
+                <strong>Timeout:</strong> Chart generation is taking too long. Please try again.
+                <button class="btn btn-outline-primary btn-sm ms-2" onclick="generateChart()">
+                    <i class="bi bi-arrow-clockwise"></i> Retry
+                </button>
+            </div>
+        `;
+        showAlert('Chart generation timeout. Please try again.', 'warning');
+    }, 30000); // 30 second timeout
+    
+    // Generate chart with comprehensive error handling
+    fetch('{% url "eda:generate_chart" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({
+            chart_type: currentChartType,
+            options: options
+        })
+    })
+    .then(response => {
+        clearTimeout(timeoutId); // Clear timeout on response
+        console.log('Response status:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            throw new Error(`Server Error ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Chart data received:', data);
+        
+        if (data.success && data.chart_data && data.layout) {
+            // Clear any existing content and render chart
+            plotContainer.innerHTML = '';
+            Plotly.newPlot('chart-plot', data.chart_data, data.layout, {
+                responsive: true,
+                displayModeBar: true,
+                modeBarButtonsToRemove: ['pan2d', 'lasso2d']
+            });
+            showAlert('Chart generated successfully!', 'success');
+        } else {
+            // Show error message
+            const errorMsg = data.error || 'Unknown error occurred';
+            plotContainer.innerHTML = `
+                <div class="alert alert-danger">
+                    <strong>Generation Failed:</strong> ${errorMsg}
+                    <button class="btn btn-outline-light btn-sm ms-2" onclick="generateChart()">
+                        <i class="bi bi-arrow-clockwise"></i> Retry
+                    </button>
+                </div>
+            `;
+            showAlert('Chart generation failed: ' + errorMsg, 'danger');
+        }
+    })
+    .catch(error => {
+        clearTimeout(timeoutId); // Clear timeout on error
+        console.error('Chart generation error:', error);
+        
+        plotContainer.innerHTML = `
+            <div class="alert alert-danger">
+                <strong>Connection Error:</strong> ${error.message}
+                <br><small>Check the browser console for more details.</small>
+                <button class="btn btn-outline-light btn-sm mt-2" onclick="generateChart()">
+                    <i class="bi bi-arrow-clockwise"></i> Retry
+                </button>
+            </div>
+        `;
+        showAlert('Connection error: ' + error.message, 'danger');
+    });
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('chartModal'));
+    if (modal) {
+        modal.hide();
+    }
+}
+
+function clearChart() {
+    document.getElementById('chart-container').style.display = 'none';
+    document.getElementById('chart-plot').innerHTML = '';
+}
+
+// Analysis functions
+function showAnalysisModal(analysisType) {
+    currentAnalysisType = analysisType;
+    document.getElementById('analysisModalLabel').textContent = `${analysisType.charAt(0).toUpperCase() + analysisType.slice(1)} Analysis`;
+    
+    let optionsHtml = '';
+    
+    if (analysisType === 'outliers') {
+        optionsHtml = `
+            <div class="mb-3">
+                <label class="form-label">Column (Numeric columns only)</label>
+                <select class="form-select" id="analysis_column" required>
+                    <option value="">Select column...</option>
+                    ${numericColumns.map(col => `<option value="${col}">${col}</option>`).join('')}
+                </select>
+            </div>
+        `;
+    }
+    
+    document.getElementById('analysis-options').innerHTML = optionsHtml;
+    new bootstrap.Modal(document.getElementById('analysisModal')).show();
+}
+
+function runAnalysis() {
+    const options = {};
+    
+    if (currentAnalysisType === 'outliers') {
+        options.column = document.getElementById('analysis_column').value;
+        if (!options.column) {
+            showAlert('Please select a column.', 'warning');
+            return;
+        }
+    }
+    
+    bootstrap.Modal.getInstance(document.getElementById('analysisModal')).hide();
+    performAnalysis(currentAnalysisType, options);
+}
+
+function performAnalysis(analysisType, options = {}) {
+    const resultsContainer = document.getElementById('analysis-results');
+    resultsContainer.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-2">Analyzing data...</p></div>';
+    
+    fetch('{% url "eda:analyze_data" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({
+            analysis_type: analysisType,
+            options: options
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            resultsContainer.innerHTML = data.html;
+            resultsContainer.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            resultsContainer.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        resultsContainer.innerHTML = '<div class="alert alert-danger">Error performing analysis</div>';
+    });
+}
+
+// Global variables for real-time updates
+let autoRefreshInterval = null;
+let lastChartConfig = null;
+let chartUpdateQueue = [];
+
+// Enhanced chart generation with caching and real-time updates
+function generateChartEnhanced(chartType, params, options = {}) {
+    const { enableAutoRefresh = false, refreshInterval = 30000, showProgress = true } = options;
+    
+    // Store chart config for potential refresh
+    lastChartConfig = { chartType, params, options };
+    
+    if (showProgress) {
+        showLoadingWithProgress('chart-container');
+    }
+    
+    // Clear any existing auto-refresh
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+    
+    const requestData = {
+        chart_type: chartType,
+        ...params
+    };
+    
+    // Add request to queue for performance tracking
+    const requestId = Date.now();
+    chartUpdateQueue.push({ id: requestId, timestamp: Date.now(), type: chartType });
+    
+    fetch('{% url "eda:generate_chart" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Remove from queue
+        chartUpdateQueue = chartUpdateQueue.filter(req => req.id !== requestId);
+        
+        const container = document.getElementById('chart-container');
+        if (data.success) {
+            // Enhanced success handling with smooth transitions
+            const plotContainer = document.getElementById('chart-plot');
+            plotContainer.style.opacity = '0.5';
+            
+            setTimeout(() => {
+                // Handle both HTML response and Plotly data response
+                if (data.html) {
+                    plotContainer.innerHTML = data.html;
+                } else if (data.chart_data) {
+                    Plotly.newPlot('chart-plot', data.chart_data, data.layout, {responsive: true});
+                }
+                
+                plotContainer.style.opacity = '1';
+                plotContainer.style.transition = 'opacity 0.3s ease-in-out';
+                
+                // Scroll to chart with better positioning
+                const rect = container.getBoundingClientRect();
+                if (rect.top < 0 || rect.bottom > window.innerHeight) {
+                    container.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center',
+                        inline: 'nearest'
+                    });
+                }
+                
+                // Show success notification
+                showToast(`${chartType.charAt(0).toUpperCase() + chartType.slice(1)} chart generated successfully!`, 'success');
+                
+            }, 150);
+            
+            // Setup auto-refresh if enabled
+            if (enableAutoRefresh && refreshInterval > 0) {
+                autoRefreshInterval = setInterval(() => {
+                    refreshCurrentChart();
+                }, refreshInterval);
+                
+                // Add refresh indicator
+                addRefreshIndicator(container, refreshInterval);
+            }
+            
+        } else {
+            document.getElementById('chart-plot').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Chart Generation Failed:</strong> ${data.error || 'Unknown error occurred'}
+                    <button class="btn btn-outline-light btn-sm ms-2" onclick="retryLastChart()">
+                        <i class="bi bi-arrow-clockwise"></i> Retry
+                    </button>
+                </div>
+            `;
+            showToast('Chart generation failed', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Chart generation error:', error);
+        chartUpdateQueue = chartUpdateQueue.filter(req => req.id !== requestId);
+        
+        document.getElementById('chart-container').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-wifi-off"></i>
+                <strong>Connection Error:</strong> Unable to generate chart. Please check your connection.
+                <button class="btn btn-outline-light btn-sm ms-2" onclick="retryLastChart()">
+                    <i class="bi bi-arrow-clockwise"></i> Retry
+                </button>
+            </div>
+        `;
+        showToast('Network error occurred', 'error');
+    });
+    
+    // Close modal after initiating request
+    const modal = bootstrap.Modal.getInstance(document.getElementById('chartModal'));
+    if (modal) {
+        modal.hide();
+    }
+}
+
+// Refresh current chart
+function refreshCurrentChart() {
+    if (lastChartConfig) {
+        const { chartType, params, options } = lastChartConfig;
+        // Refresh without auto-refresh to avoid recursion
+        generateChartEnhanced(chartType, params, { ...options, enableAutoRefresh: false, showProgress: false });
+        showToast('Chart refreshed automatically', 'info');
+    }
+}
+
+// Retry last chart generation
+function retryLastChart() {
+    if (lastChartConfig) {
+        const { chartType, params, options } = lastChartConfig;
+        generateChartEnhanced(chartType, params, options);
+    }
+}
+
+// Add refresh indicator to chart container
+function addRefreshIndicator(container, interval) {
+    const indicator = document.createElement('div');
+    indicator.className = 'chart-refresh-indicator position-absolute top-0 end-0 m-2';
+    indicator.innerHTML = `
+        <div class="badge bg-info d-flex align-items-center">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Auto-refresh: ${Math.floor(interval / 1000)}s
+            <button class="btn btn-sm btn-link text-white p-0 ms-1" onclick="stopAutoRefresh()" title="Stop auto-refresh">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+    `;
+    
+    // Position relative for indicator
+    container.style.position = 'relative';
+    container.appendChild(indicator);
+}
+
+// Stop auto refresh
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+        
+        // Remove refresh indicator
+        const indicator = document.querySelector('.chart-refresh-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+        
+        showToast('Auto-refresh stopped', 'info');
+    }
+}
+
+// Enhanced loading with progress
+function showLoadingWithProgress(containerId) {
+    const container = document.getElementById(containerId);
+    if (container) {
+        container.innerHTML = `
+            <div class="d-flex justify-content-center align-items-center" style="height: 300px;">
+                <div class="text-center">
+                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5>Generating Chart</h5>
+                    <p class="text-muted">Processing your data...</p>
+                    <div class="progress mt-3" style="width: 200px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Toast notification system
+function showToast(message, type = 'info') {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '1200';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Create toast element
+    const toastId = 'toast-' + Date.now();
+    const toastHtml = `
+        <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-${type === 'error' ? 'danger' : type} text-white">
+                <i class="bi bi-${getToastIcon(type)} me-2"></i>
+                <strong class="me-auto">EDA Chart</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body bg-dark text-white">
+                ${message}
+            </div>
+        </div>
+    `;
+    
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+    
+    // Show toast
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, {
+        autohide: true,
+        delay: type === 'error' ? 5000 : 3000
+    });
+    toast.show();
+    
+    // Remove from DOM after hiding
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+
+function getToastIcon(type) {
+    const icons = {
+        'success': 'check-circle',
+        'error': 'exclamation-triangle',
+        'warning': 'exclamation-triangle',
+        'info': 'info-circle'
+    };
+    return icons[type] || 'info-circle';
+}
+
+// Performance monitoring
+function getPerformanceMetrics() {
+    return {
+        activeRequests: chartUpdateQueue.length,
+        lastRequestTime: chartUpdateQueue.length > 0 ? 
+            Math.max(...chartUpdateQueue.map(r => r.timestamp)) : null,
+        autoRefreshActive: autoRefreshInterval !== null,
+        memoryUsage: navigator.memory ? navigator.memory.usedJSHeapSize : null
+    };
+}
+
+// Utility functions
+function showLoading(containerId) {
+    const container = document.getElementById(containerId);
+    if (container) {
+        container.innerHTML = `
+            <div class="d-flex justify-content-center align-items-center" style="height: 200px;">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Generating chart...</p>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+});
+</script>
+{% endblock %}

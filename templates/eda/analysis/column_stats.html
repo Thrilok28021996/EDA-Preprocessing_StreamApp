@@ -1,0 +1,72 @@
+<div class="card mb-3">
+    <div class="card-header">
+        <h5><i class="bi bi-bar-chart-steps"></i> Column Statistics - {{ column }}</h5>
+    </div>
+    <div class="card-body">
+        {% if result.type == 'numeric' %}
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Basic Statistics</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Count:</strong> {{ result.count }}</li>
+                    <li><strong>Mean:</strong> {{ result.mean|floatformat:3 }}</li>
+                    <li><strong>Median:</strong> {{ result.median|floatformat:3 }}</li>
+                    <li><strong>Standard Deviation:</strong> {{ result.std|floatformat:3 }}</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>Range & Quartiles</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Minimum:</strong> {{ result.min|floatformat:3 }}</li>
+                    <li><strong>25th Percentile (Q1):</strong> {{ result.q25|floatformat:3 }}</li>
+                    <li><strong>75th Percentile (Q3):</strong> {{ result.q75|floatformat:3 }}</li>
+                    <li><strong>Maximum:</strong> {{ result.max|floatformat:3 }}</li>
+                </ul>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12">
+                <ul class="list-unstyled">
+                    <li><strong>Unique Values:</strong> <span class="badge bg-info">{{ result.unique_values }}</span></li>
+                    <li><strong>Missing Values:</strong> <span class="badge bg-warning">{{ result.null_count }}</span></li>
+                </ul>
+            </div>
+        </div>
+        {% else %}
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Basic Information</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Count:</strong> {{ result.count }}</li>
+                    <li><strong>Unique Values:</strong> <span class="badge bg-info">{{ result.unique_values }}</span></li>
+                    <li><strong>Missing Values:</strong> <span class="badge bg-warning">{{ result.null_count }}</span></li>
+                    {% if result.most_frequent %}
+                    <li><strong>Most Frequent:</strong> <code>{{ result.most_frequent }}</code></li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>Value Frequencies</h6>
+                <div class="scrollable-content" style="max-height: 200px;">
+                    <table class="table table-dark table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>Value</th>
+                                <th>Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for value, count in result.frequency_counts.items %}
+                            <tr>
+                                <td>{{ value }}</td>
+                                <td>{{ count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
